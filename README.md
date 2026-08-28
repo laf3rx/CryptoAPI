@@ -1,29 +1,229 @@
 # CryptoAPI
-Репозиторий представляет из себя архив разработанных модулей CryptoAPI для тех или иных функций шифрования
-CAPI1-1
-<img width="1577" height="901" alt="image" src="https://github.com/user-attachments/assets/78df34ce-b90d-4727-a04d-2c4d18f0a4fc" />
-CAPI1-2
-<img width="1479" height="675" alt="image" src="https://github.com/user-attachments/assets/a69c1252-1084-47a7-bda5-444ac6deadfd" />
 
-CAPI-2
-<img width="1217" height="690" alt="image" src="https://github.com/user-attachments/assets/d5fe4e34-04f1-4bee-b10d-faf8fd9ed485" />
+Репозиторий с модулями на C/C++ для работы с криптографическими интерфейсами Windows.
 
-CAPI-3
-<img width="1319" height="622" alt="image" src="https://github.com/user-attachments/assets/befbd841-c58a-4dc6-a131-75de9034f86c" />
+- **CAPI 1–8** — классический CryptoAPI (`wincrypt.h`, `Advapi32` / `Crypt32`)
+- **CAPI 9–13** — CNG: BCrypt и NCrypt (`bcrypt.h`, `ncrypt.h`)
 
+Каждый файл — отдельная консольная программа. В Visual Studio их удобно держать как проекты одного решения.
 
-CAPI-4
-<img width="856" height="408" alt="image" src="https://github.com/user-attachments/assets/fc9be07e-e1fa-400b-b700-a03c0e09db08" />
+## Состав
 
-CAPI-5
-<img width="1211" height="658" alt="image" src="https://github.com/user-attachments/assets/74d0a628-c3e2-43c2-96d3-14a136b3cc6b" />
+| Модуль | Файл | Назначение |
+| --- | --- | --- |
+| CAPI1 | `CAPI_1.cpp` | Список установленных CSP и типов провайдеров |
+| CAPI1-2 | `CAPI_1-2.cpp` | Список зарегистрированных типов CSP |
+| CAPI2 | `CAPI_2.cpp` | Профиль выбранного криптопровайдера |
+| CAPI3 | `CAPI-3.cpp` | SHA-256 хеш-сумма файла |
+| CAPI4 | `CAPI-4.cpp` | Контейнеры провайдера и состав ключевых пар |
+| CAPI5 | `CAPI-5.cpp` | Генерация, экспорт и импорт ключей в BLOB |
+| CAPI6 | `CAPI-6.cpp` | Подпись файла и проверка подписи |
+| CAPI7 | `CAPI-7.cpp` | Шифрование и расшифрование файла на пароле |
+| CAPI8 | `CAPI-8.cpp` | Согласование сеансового ключа по Diffie–Hellman |
+| CAPI9-1 | `CAPI9-1.cpp` | SHA-256 файла через CNG / BCrypt |
+| CAPI9-2 | `CAPI-9-2.cpp` | HMAC-SHA256 файла через CNG / BCrypt |
+| CAPI10 | `CAPI-10.cpp` | Перечень алгоритмов CNG |
+| CAPI11 | `CAPI-11.cpp` | HMAC-SHA256 файла через CNG / BCrypt |
+| CAPI12 | `CAPI-12.cpp` | Подпись и проверка ECDSA P-256 (NCrypt + BCrypt) |
+| CAPI13 | `CAPI-13.cpp` | Шифрование файла AES на ключе из PBKDF2 |
 
-CAPI-6
-<img width="1129" height="208" alt="image" src="https://github.com/user-attachments/assets/f02ef2b6-bda9-491e-9dc0-a8e8c83c7001" />
+## Требования
 
+- Windows
+- Visual Studio или другая среда с компилятором C/C++
+- Библиотеки: `Advapi32.lib`, `Crypt32.lib` (модули 1–8); `Bcrypt.lib` (9–13); `Ncrypt.lib` (12)
 
-CAPI-7
-<img width="1202" height="386" alt="image" src="https://github.com/user-attachments/assets/b68d9409-3ed4-47bb-a9bf-ef0fa9f0a0f9" />
+Рекомендуются штатные провайдеры Microsoft.
 
-CAPI-8
-<img width="1214" height="665" alt="image" src="https://github.com/user-attachments/assets/4d6a17e0-9daf-4d40-9bb0-a12abb15d034" />
+---
+
+### CAPI1 — перечень CSP и типов
+
+`CAPI_1.cpp`
+
+Модуль опрашивает CryptoAPI и печатает две таблицы:
+
+- установленные криптопровайдеры: порядковый номер, тип, имя (`CryptEnumProvidersW`);
+- зарегистрированные типы провайдеров: номер типа и наименование (`CryptEnumProviderTypesW`).
+
+### CAPI1-2 — типы провайдеров
+
+`CAPI_1-2.cpp`
+
+Отдельная точка входа только для типов CSP. Через `CryptEnumProviderTypesW` выводит номер типа и его название.
+
+### CAPI2 — профиль криптопровайдера
+
+`CAPI_2.cpp`
+
+Сначала печатает список установленных CSP и даёт выбрать провайдер по номеру. Затем за один запуск показывает карточку выбранного провайдера:
+
+- тип реализации (программный, аппаратный, съёмный, смешанный) — `PP_IMPTYPE`;
+- версия — `PP_VERSION`;
+- шаг изменения длины ключа подписи и ключа обмена — `PP_SIG_KEYSIZE_INC`, `PP_KEYX_KEYSIZE_INC`;
+- полный список алгоритмов через `PP_ENUMALGS_EX`: идентификатор, короткое и полное имя, класс, тип (блочный/потоковый, RSA/DSS), длины ключа, протоколы (SSL, TLS, PCT, IPSec).
+
+### CAPI3 — хеш-сумма файла
+
+`CAPI-3.cpp`
+
+Считает SHA-256 указанного файла средствами CryptoAPI.
+
+- провайдер `MS_ENH_RSA_AES_PROV` / `PROV_RSA_AES`;
+- файл читается блоками по 4 КБ;
+- хеш строится через `CryptCreateHash` (`CALG_SHA_256`), `CryptHashData`, `CryptGetHashParam`;
+- результат печатается в hex.
+
+В текущей сборке путь зашит как `CryptoAPI.pptx`.
+
+### CAPI4 — инвентаризация контейнеров
+
+`CAPI-4.cpp`
+
+Показывает ключевые контейнеры выбранного CSP.
+
+- перечисляет провайдеры и даёт выбрать один;
+- через `PP_ENUMCONTAINERS` обходит контейнеры;
+- для каждого контейнера проверяет пары `AT_SIGNATURE` и `AT_KEYEXCHANGE` (`CryptGetUserKey`);
+- печатает состав: обе пары, только подпись, только обмен или пустой контейнер.
+
+### CAPI5 — экспорт и импорт ключей
+
+`CAPI-5.cpp`
+
+Полный цикл работы с контейнерами и форматами BLOB на `PROV_RSA_FULL`.
+
+- создаёт или открывает `Container1`, `Container2`, `Container3`;
+- в `Container1` генерирует экспортируемую пару обмена (4096 бит) и сохраняет открытый ключ в `KeyX Public.bin`;
+- в `Container2` генерирует пару подписи и сохраняет открытый ключ в `DS Public.bin`;
+- без контейнера генерирует сеансовый ключ RC4: plaintext BLOB → `Session Key Plaintext.bin`, simple BLOB на открытом ключе обмена → `Session Key Encrypted.bin`;
+- импортирует оба варианта сеансового ключа в `Container1` и сверяет их повторным экспортом в plaintext BLOB;
+- выгружает пару подписи в `DS Private Unencrypted.bin` и в `DS Private Encrypted.bin` (обёртка сеансовым ключом из пароля);
+- переносит защищённую пару подписи в `Container3`.
+
+### CAPI6 — цифровая подпись файла
+
+`CAPI-6.cpp`
+
+Подписывает файл и затем проверяет подпись.
+
+- контейнер `CAPI6_ECP_CONTAINER`, провайдер `MS_ENH_RSA_AES_PROV`;
+- генерирует пару `AT_SIGNATURE`, открытый ключ пишет в `public.key`;
+- хеширует файл алгоритмом SHA-256 и подписывает хеш (`CryptSignHash`) → `signature.sig`;
+- при проверке импортирует открытый ключ, заново считает хеш и вызывает `CryptVerifySignature`;
+- после подписи программа предлагает изменить файл и повторяет проверку.
+
+### CAPI7 — шифрование файла на пароле
+
+`CAPI-7.cpp`
+
+Шифрует и расшифровывает файл сеансовым ключом AES-128, построенным из пароля.
+
+- провайдер `MS_ENH_RSA_AES_PROV`;
+- ключ: SHA-256 пароля → `CryptDeriveKey` (`CALG_AES_128`);
+- режим CBC, PKCS5 padding, случайный IV (`CryptGenRandom`);
+- в заголовок шифртекста пишутся salt, проверочный хеш сеансового ключа (`CryptHashSessionKey`) и IV;
+- расшифрование читает заголовок, заново строит ключ из пароля и сравнивает результат с исходным файлом.
+
+### CAPI8 — Diffie–Hellman
+
+`CAPI-8.cpp`
+
+Выработка общего сеансового ключа двумя абонентами на провайдере `MS_ENH_DSS_DH_PROV`.
+
+1. Абонент A (`ContA`) генерирует пару `CALG_DH_SF` длиной 1024 бит и сохраняет параметры и открытый ключ в `P.bin`, `G.bin`, `Y_A.bin`.
+2. Абонент B импортирует `P` и `G`, генерирует эфемерную пару `CALG_DH_EPHEM` и сохраняет `Y_B.bin`.
+3. Абонент A считает общий секрет из `Y_B` и своего закрытого ключа, строит сеансовый ключ и его хеш.
+4. Абонент B делает симметричную операцию с `Y_A`. Хеши сеансовых ключей должны совпасть.
+
+Запуск последовательный: A → B → A → B в одной программе.
+
+### CAPI9-1 — SHA-256 через CNG
+
+`CAPI9-1.cpp`
+
+Считает SHA-256 файла через BCrypt.
+
+```
+CAPI9-1.exe <path_to_file>
+```
+
+Открывает провайдер `BCRYPT_SHA256_ALGORITHM`, хеширует файл блоками по 4 КБ (`BCryptCreateHash`, `BCryptHashData`, `BCryptFinishHash`) и печатает digest в hex.
+
+### CAPI9-2 — HMAC-SHA256 через CNG
+
+`CAPI-9-2.cpp`
+
+Считает HMAC-SHA256 файла на ключе из пароля.
+
+```
+CAPI-9-2.exe <path_to_file> <password>
+```
+
+Провайдер SHA-256 открывается с флагом `BCRYPT_ALG_HANDLE_HMAC_FLAG`. Пароль передаётся в `BCryptCreateHash` как ключ HMAC.
+
+### CAPI10 — перечень алгоритмов CNG
+
+`CAPI-10.cpp`
+
+Через `BCryptEnumAlgorithms` печатает имена всех зарегистрированных алгоритмов CNG для операций:
+
+- шифрование;
+- хеширование;
+- подпись;
+- асимметричное шифрование;
+- согласование секрета;
+- ГСЧ.
+
+Память списка освобождается `BCryptFreeBuffer`.
+
+### CAPI11 — HMAC-SHA256 через CNG
+
+`CAPI-11.cpp`
+
+Тот же сценарий, что у CAPI9-2: HMAC-SHA256 указанного файла на пароле через BCrypt.
+
+```
+CAPI-11.exe <path_to_file> <password>
+```
+
+### CAPI12 — подпись ECDSA P-256
+
+`CAPI-12.cpp`
+
+Подпись и проверка файла на эллиптической кривой P-256. Хеш — SHA-256 (BCrypt), ключ и подпись — NCrypt (`MS_KEY_STORAGE_PROVIDER`).
+
+```
+CAPI-12.exe sign   <file> <out_signature> <out_pubkey>
+CAPI-12.exe verify <file> <in_signature>  <in_pubkey>
+```
+
+- `sign` создаёт постоянный ключ `my ecc file key` (`NCRYPT_ECDSA_P256_ALGORITHM`), подписывает хеш файла и сохраняет подпись и открытый ключ (`BCRYPT_ECCPUBLIC_BLOB`);
+- `verify` импортирует открытый ключ в BCrypt и проверяет подпись (`BCryptVerifySignature`).
+
+### CAPI13 — AES на ключе PBKDF2
+
+`CAPI-13.cpp`
+
+Шифрование и расшифрование файла в интерактивном режиме.
+
+- предлагает выбрать операцию: шифровать или расшифровать;
+- показывает файлы текущего каталога и просит номер файла и пароль;
+- из пароля через `BCRYPT_PBKDF2_ALGORITHM` (соль и 10 000 итераций) получает 16-байтовый ключ;
+- шифрует / расшифровывает AES с padding (`BCryptEncrypt` / `BCryptDecrypt`);
+- результат: `encrypted.bin` или `decrypted.txt`.
+
+---
+
+## Сборка
+
+Консольный проект C/C++ на Windows. Типичные библиотеки линковщика:
+
+```
+Advapi32.lib
+Crypt32.lib
+Bcrypt.lib
+Ncrypt.lib
+```
+
+Контейнеры (`Container1`, `Container2`, `Container3`, `ContA`, `CAPI6_ECP_CONTAINER`) создаются в профиле текущего пользователя. Повторный запуск модулей, которые создают контейнер с тем же именем, либо открывает уже существующий набор ключей, либо требует его удаления.
