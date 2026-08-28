@@ -1,4 +1,5 @@
 # CryptoAPI
+Репозиторий представляет из себя архив разработанных модулей CryptoAPI для тех или иных функций шифрования
 CAPI1-1
 <img width="1577" height="901" alt="image" src="https://github.com/user-attachments/assets/78df34ce-b90d-4727-a04d-2c4d18f0a4fc" />
 CAPI1-2
