@@ -19,3 +19,7 @@ CAPI-5
 
 CAPI-6
 <img width="1129" height="208" alt="image" src="https://github.com/user-attachments/assets/f02ef2b6-bda9-491e-9dc0-a8e8c83c7001" />
+
+
+CAPI-7
+<img width="1202" height="386" alt="image" src="https://github.com/user-attachments/assets/b68d9409-3ed4-47bb-a9bf-ef0fa9f0a0f9" />
